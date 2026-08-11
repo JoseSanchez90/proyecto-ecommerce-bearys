@@ -200,7 +200,7 @@ function Navbar() {
   };
 
   return (
-    <nav className="relative z-50 mx-auto mt-5 w-full max-w-5xl px-4 sm:mt-8 sm:px-6 lg:px-8">
+    <nav className="relative z-50 mx-auto mt-5 w-full max-w-5xl px-4">
       <div className="relative z-50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="font-monoton text-xl font-medium text-gray-900 sm:text-2xl">
