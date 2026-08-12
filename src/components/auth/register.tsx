@@ -57,7 +57,7 @@ function RegisterModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="p-6 sm:p-8">
         <DialogHeader className="text-center">
-          <DialogTitle className="font-monoton text-3xl">K-Osito</DialogTitle>
+          <DialogTitle className="font-monoton text-3xl">Bearys</DialogTitle>
           <DialogDescription className="text-gray-500 text-sm">
             Crea tu cuenta y empieza a comprar
           </DialogDescription>
