@@ -108,12 +108,12 @@ function Productos() {
   return (
     <main>
       {/* PORTADA */}
-      <section className="relative mx-auto mt-6 w-full max-w-400 px-4 pb-16 sm:mt-8 sm:px-6 lg:mt-6 2xl:mt-12 lg:px-10 lg:pb-24">
+      <section className="relative mx-auto mt-6 w-full max-w-400 px-4 pb-16 sm:mt-8 sm:px-6 lg:mt-6 lg:px-10 lg:pb-24">
         <div className="relative rounded-4xl overflow-hidden">
           <img
             src={settings.productsHeaderImage}
             alt="catálogo"
-            className="h-72 w-full rounded-4xl object-cover sm:h-96 lg:h-136 2xl:h-140"
+            className="h-72 w-full rounded-4xl object-cover sm:h-96 lg:h-124 2xl:h-140"
           />
           <div className="absolute bg-black/40 lg:bg-transparent inset-0 rounded-4xl" />
         </div>

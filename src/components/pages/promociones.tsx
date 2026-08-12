@@ -38,12 +38,12 @@ function Promociones() {
   return (
     <main>
       {/* HERO */}
-      <section className="relative mx-auto max-w-400 px-4 pb-16 mt-6 sm:px-6 sm:mt-8 lg:px-10 lg:pb-24 lg:mt-6 2xl:mt-12 xl:px-12">
+      <section className="relative mx-auto max-w-400 px-4 pb-16 mt-6 sm:px-6 sm:mt-8 lg:px-10 lg:pb-24 lg:mt-6 xl:px-12">
         <div className="relative overflow-hidden rounded-4xl">
           <img
             src={settings.promotionsHeaderImage}
             alt="promociones desktop"
-            className="hidden h-72 w-full object-cover sm:h-96 lg:h-136 2xl:h-140 md:block"
+            className="hidden h-72 w-full object-cover sm:h-96 lg:h-124 2xl:h-140 md:block"
           />
           <img
             src={settings.promotionsMobileImage}

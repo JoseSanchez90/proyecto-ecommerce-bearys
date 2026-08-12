@@ -118,7 +118,7 @@ function Home() {
   return (
     <main>
       {/* PORTADA */}
-      <section className="relative mx-auto mt-6 h-72 w-[calc(100%-2rem)] max-w-400 sm:mt-8 sm:h-96 lg:mt-6 2xl:mt-12 lg:h-136 2xl:h-140">
+      <section className="relative mx-auto mt-6 h-72 w-[calc(100%-2rem)] max-w-400 sm:mt-8 sm:h-96 lg:mt-6 lg:h-124 2xl:h-140">
         <div className="absolute inset-0 hidden md:block">
           <Carousel
             setApi={setApi}

@@ -34,12 +34,12 @@ const fieldClass =
 function Contacto() {
   return (
     <main className="text-gray-900">
-      <section className="relative mx-auto max-w-400 px-4 pb-16 mt-6 sm:px-6 sm:mt-8 lg:px-10 lg:pb-24 lg:mt-6 2xl:mt-12 xl:px-12">
+      <section className="relative mx-auto max-w-400 px-4 pb-16 mt-6 sm:px-6 sm:mt-8 lg:px-10 lg:pb-24 lg:mt-6 xl:px-12">
         <div className="relative rounded-4xl overflow-hidden">
           <img
             src="/images/contact.webp"
             alt="Amigurumis Bearys hechos a mano"
-            className="h-72 w-full rounded-4xl object-cover sm:h-96 lg:h-136 2xl:h-140"
+            className="h-72 w-full rounded-4xl object-cover sm:h-96 lg:h-124 2xl:h-140"
           />
           <div className="absolute bg-black/40 lg:bg-transparent inset-0 rounded-4xl" />
         </div>
