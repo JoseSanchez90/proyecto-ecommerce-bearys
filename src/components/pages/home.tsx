@@ -90,24 +90,42 @@ const reviews = [
 ];
 
 function Home() {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
+  const [desktopApi, setDesktopApi] = useState<CarouselApi>();
+  const [mobileApi, setMobileApi] = useState<CarouselApi>();
+  const [desktopCurrent, setDesktopCurrent] = useState(0);
+  const [mobileCurrent, setMobileCurrent] = useState(0);
   const { products: dbProducts } = useProducts();
   const { settings } = useSiteSettings();
 
   useEffect(() => {
-    if (!api) return;
+    if (!desktopApi) return;
 
-    const onSelect = () => setCurrent(api.selectedScrollSnap());
-    api.on("select", onSelect);
+    const onSelect = () => setDesktopCurrent(desktopApi.selectedScrollSnap());
+    onSelect();
+    desktopApi.on("select", onSelect);
 
-    const timer = setInterval(() => api.scrollNext(), 8000);
+    const timer = setInterval(() => desktopApi.scrollNext(), 8000);
 
     return () => {
       clearInterval(timer);
-      api.off("select", onSelect);
+      desktopApi.off("select", onSelect);
     };
-  }, [api]);
+  }, [desktopApi]);
+
+  useEffect(() => {
+    if (!mobileApi) return;
+
+    const onSelect = () => setMobileCurrent(mobileApi.selectedScrollSnap());
+    onSelect();
+    mobileApi.on("select", onSelect);
+
+    const timer = setInterval(() => mobileApi.scrollNext(), 8000);
+
+    return () => {
+      clearInterval(timer);
+      mobileApi.off("select", onSelect);
+    };
+  }, [mobileApi]);
 
   const configuredFeatured = dbProducts.filter(
     (product) => product.isFeaturedMonth,
@@ -121,7 +139,7 @@ function Home() {
       <section className="relative mx-auto mt-6 h-72 w-[calc(100%-2rem)] max-w-400 sm:mt-8 sm:h-96 lg:mt-6 lg:h-124 2xl:h-140">
         <div className="absolute inset-0 hidden md:block">
           <Carousel
-            setApi={setApi}
+            setApi={setDesktopApi}
             opts={{ loop: true }}
             className="h-full w-full **:data-[slot=carousel-content]:h-full"
           >
@@ -144,7 +162,7 @@ function Home() {
 
         <div className="absolute inset-0 md:hidden">
           <Carousel
-            setApi={setApi}
+            setApi={setMobileApi}
             opts={{ loop: true }}
             className="h-full w-full **:data-[slot=carousel-content]:h-full"
           >
@@ -165,13 +183,27 @@ function Home() {
           </Carousel>
         </div>
 
-        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white p-2">
+        <div className="absolute bottom-3 left-1/2 z-10 hidden -translate-x-1/2 gap-2 rounded-full bg-white p-2 md:flex">
           {settings.homeDesktopImages.map((_, i) => (
             <button
               key={i}
-              onClick={() => api?.scrollTo(i)}
+              onClick={() => desktopApi?.scrollTo(i)}
               className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                i === current
+                i === desktopCurrent
+                  ? "bg-blue-600 w-6"
+                  : "bg-blue-300 hover:bg-blue-400"
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="absolute bottom-3 left-1/2 z-10 flex -translate-x-1/2 gap-2 rounded-full bg-white p-2 md:hidden">
+          {settings.homeMobileImages.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => mobileApi?.scrollTo(i)}
+              className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                i === mobileCurrent
                   ? "bg-blue-600 w-6"
                   : "bg-blue-300 hover:bg-blue-400"
               }`}
