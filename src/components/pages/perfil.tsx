@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   FaBagShopping,
   FaBoxOpen,
@@ -33,7 +34,7 @@ const statusDetails: Record<
   { label: string; className: string; progress: number }
 > = {
   pending: {
-    label: "Pedido recibido",
+    label: "Recibido",
     className: "bg-amber-100 text-amber-700",
     progress: 0,
   },
@@ -45,17 +46,17 @@ const statusDetails: Record<
   preparing: {
     label: "En preparación",
     className: "bg-violet-100 text-violet-700",
-    progress: 1,
+    progress: 2,
   },
   shipped: {
     label: "Enviado",
     className: "bg-sky-100 text-sky-700",
-    progress: 2,
+    progress: 3,
   },
   delivered: {
     label: "Entregado",
     className: "bg-emerald-100 text-emerald-700",
-    progress: 3,
+    progress: 4,
   },
   cancelled: {
     label: "Cancelado",
@@ -64,7 +65,13 @@ const statusDetails: Record<
   },
 };
 
-const progressSteps = ["Recibido", "Preparando", "Enviado", "Entregado"];
+const progressSteps = [
+  "Recibido",
+  "Confirmado",
+  "Preparando",
+  "Enviado",
+  "Entregado",
+];
 
 const dateFormatter = new Intl.DateTimeFormat("es-PE", {
   day: "2-digit",
@@ -77,6 +84,7 @@ function formatCurrency(value: number) {
 }
 
 function Perfil() {
+  const { hash } = useLocation();
   const { user, logout } = useAuth();
   const { orders, loading, error, refetch } = useOrders(user?.id);
   const {
@@ -88,6 +96,18 @@ function Perfil() {
     error: addressError,
     save: saveAddress,
   } = useDeliveryAddress(user?.id);
+
+  useEffect(() => {
+    if (hash !== "#pedidos") return;
+
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .getElementById("pedidos")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [hash]);
 
   if (!user) return null;
 
@@ -490,7 +510,7 @@ function Perfil() {
                             más información.
                           </p>
                         ) : (
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                             {progressSteps.map((step, index) => (
                               <div key={step} className="min-w-0">
                                 <div
@@ -500,7 +520,7 @@ function Perfil() {
                                       : "bg-gray-200"
                                   }`}
                                 />
-                                <p className="mt-2 truncate text-[0.65rem] font-semibold text-gray-500 sm:text-xs">
+                                <p className="mt-2 truncate text-[0.58rem] font-semibold text-gray-500 min-[420px]:text-[0.65rem] sm:text-xs">
                                   {step}
                                 </p>
                               </div>

@@ -11,7 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
-import { FiLoader } from "react-icons/fi";
+import { FiCheckCircle, FiLoader } from "react-icons/fi";
+
+const PASSWORD_MIN_LENGTH = 8;
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -35,11 +37,36 @@ function RegisterModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const passwordRequirements = [
+    {
+      label: `Mínimo ${PASSWORD_MIN_LENGTH} caracteres (${Math.min(password.length, PASSWORD_MIN_LENGTH)}/${PASSWORD_MIN_LENGTH})`,
+      met: password.length >= PASSWORD_MIN_LENGTH,
+    },
+    { label: "Una letra mayúscula", met: /[A-Z]/.test(password) },
+    { label: "Una letra minúscula", met: /[a-z]/.test(password) },
+    { label: "Un número", met: /[0-9]/.test(password) },
+    {
+      label: "Un carácter especial",
+      met: /[^A-Za-z0-9\s]/.test(password),
+    },
+    {
+      label: "Ambas contraseñas coinciden",
+      met: confirmPassword.length > 0 && password === confirmPassword,
+    },
+  ];
+  const passwordIsSecure = passwordRequirements.slice(0, 5).every(({ met }) => met);
+  const passwordsMatch = passwordRequirements[5].met;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (password !== confirmPassword) {
+    if (!passwordIsSecure) {
+      setError("La contraseña no cumple con todos los requisitos de seguridad.");
+      return;
+    }
+
+    if (!passwordsMatch) {
       setError("Las contraseñas no coinciden");
       return;
     }
@@ -62,7 +89,7 @@ function RegisterModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="p-6 sm:p-8">
+      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto p-6 sm:p-8">
         <DialogHeader className="text-center">
           <DialogTitle className="font-monoton text-3xl">Bearys</DialogTitle>
           <DialogDescription className="text-gray-500 text-sm">
@@ -106,6 +133,8 @@ function RegisterModal({
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
               required
             />
           </div>
@@ -116,11 +145,44 @@ function RegisterModal({
               placeholder="••••••••"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
               required
             />
           </div>
 
-          {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+          <div
+            className="rounded-2xl border border-gray-200 bg-gray-50 p-4"
+            aria-label="Requisitos de contraseña"
+          >
+            <p className="mb-3 text-sm font-medium text-gray-700">
+              Tu contraseña debe incluir:
+            </p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {passwordRequirements.map(({ label, met }) => (
+                <li
+                  key={label.split(" (")[0]}
+                  className={`flex items-center gap-2 text-xs transition-colors ${
+                    met ? "font-medium text-green-600" : "text-gray-500"
+                  }`}
+                >
+                  <FiCheckCircle
+                    className={`h-4 w-4 shrink-0 ${
+                      met ? "text-green-500" : "text-gray-300"
+                    }`}
+                    aria-hidden="true"
+                  />
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {error && (
+            <p className="text-center text-sm text-red-500" role="alert">
+              {error}
+            </p>
+          )}
 
           <div className="flex items-center gap-2">
             <Checkbox
@@ -157,7 +219,9 @@ function RegisterModal({
             type="submit"
             size="lg"
             className="w-full bg-violet-600 hover:bg-violet-500 transition-colors cursor-pointer"
-            disabled={!acceptTerms || submitting}
+            disabled={
+              !acceptTerms || !passwordIsSecure || !passwordsMatch || submitting
+            }
           >
             {submitting ? (
               <>

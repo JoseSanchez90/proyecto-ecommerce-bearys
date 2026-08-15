@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import {
   FiArrowLeft,
+  FiCheckCircle,
   FiChevronDown,
   FiLoader,
   FiLogOut,
@@ -46,6 +47,19 @@ import {
   getShippingCost,
 } from "@/data/peru-locations";
 import { useDeliveryAddress } from "@/hooks/use-delivery-address";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface CreatedOrderSummary {
+  id: number;
+  itemCount: number;
+  total: number;
+}
 
 const menuItems = [
   { label: "Inicio", path: "/" },
@@ -64,6 +78,9 @@ function Navbar() {
   const [cartError, setCartError] = useState<string | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<"cart" | "delivery">("cart");
   const [purchaseConfirmed, setPurchaseConfirmed] = useState(false);
+  const [createdOrder, setCreatedOrder] = useState<CreatedOrderSummary | null>(
+    null,
+  );
   const [openDeliverySelect, setOpenDeliverySelect] = useState<
     "department" | "province" | "district" | null
   >(null);
@@ -157,6 +174,13 @@ function Navbar() {
       const unitPrice = (product?.price || 0) + size.priceMod;
       return `- ${product?.name} · ${size.label} x${item.quantity} (S/. ${unitPrice * item.quantity})`;
     });
+    const purchasedItemCount = items.reduce(
+      (sum, item) => sum + item.quantity,
+      0,
+    );
+    const whatsappWindow = window.open("about:blank", "_blank");
+    if (whatsappWindow) whatsappWindow.opener = null;
+
     setIsCreatingOrder(true);
     try {
       const orderId = await createOrder(
@@ -180,16 +204,27 @@ function Navbar() {
       }\nEnvío: ${shippingCost === 0 ? "Gratis" : `S/. ${shippingCost}`}\nTotal: S/. ${
         orderTotal
       }\nPedido web: #${String(orderId).padStart(5, "0")}`;
-      const whatsappUrl = `https://wa.me/521234567890?text=${encodeURIComponent(
+      const whatsappUrl = `https://wa.me/51960041583?text=${encodeURIComponent(
         message,
       )}`;
 
+      setCreatedOrder({
+        id: orderId,
+        itemCount: purchasedItemCount,
+        total: orderTotal,
+      });
       clearCart();
       setPurchaseConfirmed(false);
       setCheckoutStep("cart");
       setIsCartOpen(false);
-      window.location.assign(whatsappUrl);
+
+      if (whatsappWindow) {
+        whatsappWindow.location.replace(whatsappUrl);
+      } else {
+        window.location.assign(whatsappUrl);
+      }
     } catch (cause) {
+      whatsappWindow?.close();
       console.warn("No se pudo registrar el pedido en Neon", cause);
       setCartError(
         "No pudimos crear la compra en tu historial. Revisa la configuración de Neon e inténtalo nuevamente.",
@@ -724,6 +759,87 @@ function Navbar() {
               </aside>
             </div>
           )}
+
+          <Dialog
+            open={createdOrder !== null}
+            onOpenChange={(open) => {
+              if (!open) setCreatedOrder(null);
+            }}
+          >
+            <DialogContent className="w-[calc(100%-2rem)] max-w-md rounded-4xl p-6 2xl:p-8">
+              {createdOrder && (
+                <div className="flex flex-col items-center text-center">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 sm:h-20 sm:w-20">
+                    <FiCheckCircle className="h-8 w-8 sm:h-10 sm:w-10" />
+                  </span>
+
+                  <DialogHeader className="mt-5 items-center text-center sm:mt-6">
+                    <span className="w-fit rounded-full bg-emerald-100 px-4 py-1.5 text-xs font-bold text-emerald-700">
+                      Pedido creado
+                    </span>
+                    <DialogTitle className="text-2xl font-bold 2xl:text-3xl">
+                      ¡Gracias por tu compra!
+                    </DialogTitle>
+                    <DialogDescription className="2xl:mt-2 text-sm leading-6 text-gray-500 2xl:text-base">
+                      Registramos correctamente tu pedido y abrimos WhatsApp
+                      para que puedas coordinar la compra con nosotros.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="mt-3 grid w-full grid-cols-2 gap-3 rounded-3xl bg-gray-50 p-4 text-left 2xl:p-5">
+                    <div className="col-span-2 pb-4 text-center">
+                      <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+                        Número de pedido
+                      </p>
+                      <p className="mt-1 text-2xl font-bold text-gray-950">
+                        #{String(createdOrder.id).padStart(5, "0")}
+                      </p>
+                    </div>
+                    <div className="pt-1">
+                      <p className="text-xs text-gray-500">Productos</p>
+                      <p className="mt-1 font-bold text-gray-900">
+                        {createdOrder.itemCount}
+                      </p>
+                    </div>
+                    <div className="pt-1 text-right">
+                      <p className="text-xs text-gray-500">Total</p>
+                      <p className="mt-1 font-bold text-gray-900">
+                        S/. {createdOrder.total.toFixed(2)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-sm leading-6 text-gray-600">
+                    Puedes revisar el estado y seguimiento de tu compra cuando
+                    quieras desde <strong>Mis pedidos</strong>.
+                  </p>
+
+                  <div className="mt-6 grid w-full gap-3 sm:grid-cols-2">
+                    <Button
+                      asChild
+                      className="h-12 w-full rounded-full bg-violet-700 font-bold text-white hover:bg-violet-600"
+                    >
+                      <Link
+                        to="/perfil#pedidos"
+                        onClick={() => setCreatedOrder(null)}
+                      >
+                        <FiPackage className="h-4 w-4" />
+                        Ir a seguimiento
+                      </Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCreatedOrder(null)}
+                      className="h-12 w-full cursor-pointer rounded-full font-bold"
+                    >
+                      Cerrar
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
           <button
             type="button"
             aria-label={isMenuOpen ? "Cerrar menú" : "Abrir menú"}

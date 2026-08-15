@@ -2,19 +2,23 @@ import { neonData } from "@/lib/neon-data";
 import type { Product } from "@/data/products";
 import type { ProductSize } from "@/data/product-sizes";
 
-export const ORDER_STATUSES = [
+export const ORDER_WORKFLOW_STATUSES = [
   "pending",
   "confirmed",
   "preparing",
   "shipped",
   "delivered",
+] as const;
+
+export const ORDER_STATUSES = [
+  ...ORDER_WORKFLOW_STATUSES,
   "cancelled",
 ] as const;
 
 export type AdminOrderStatus = (typeof ORDER_STATUSES)[number];
 
 export const ORDER_STATUS_LABELS: Record<AdminOrderStatus, string> = {
-  pending: "Pendiente",
+  pending: "Recibido",
   confirmed: "Confirmado",
   preparing: "Preparando",
   shipped: "Enviado",

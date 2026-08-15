@@ -31,6 +31,50 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function translateAuthMessage(message: string, fallback: string) {
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("invalid origin")) {
+    return "Este dominio no está autorizado en Neon Auth. Agrega la URL del sitio a los orígenes permitidos.";
+  }
+
+  if (
+    normalizedMessage.includes("password does not meet security requirements") ||
+    normalizedMessage.includes("password is too short") ||
+    normalizedMessage.includes("weak password")
+  ) {
+    return "La contraseña no cumple con los requisitos de seguridad.";
+  }
+
+  if (
+    normalizedMessage.includes("user already exists") ||
+    normalizedMessage.includes("email already exists") ||
+    normalizedMessage.includes("email is already in use")
+  ) {
+    return "Ya existe una cuenta registrada con este correo electrónico.";
+  }
+
+  if (normalizedMessage.includes("invalid email")) {
+    return "El correo electrónico ingresado no es válido.";
+  }
+
+  if (
+    normalizedMessage.includes("invalid credentials") ||
+    normalizedMessage.includes("invalid email or password")
+  ) {
+    return "El correo electrónico o la contraseña son incorrectos.";
+  }
+
+  if (
+    normalizedMessage.includes("failed to fetch") ||
+    normalizedMessage.includes("network")
+  ) {
+    return "No se pudo conectar con el servicio de autenticación. Revisa tu conexión e inténtalo nuevamente.";
+  }
+
+  return message || fallback;
+}
+
 function getAuthErrorMessage(cause: unknown, fallback: string) {
   const message =
     cause instanceof Error
@@ -39,18 +83,7 @@ function getAuthErrorMessage(cause: unknown, fallback: string) {
         ? String(cause.message)
         : "";
 
-  if (message.toLowerCase().includes("invalid origin")) {
-    return "Este dominio no está autorizado en Neon Auth. Agrega la URL del sitio a los orígenes permitidos.";
-  }
-
-  if (
-    message.toLowerCase().includes("failed to fetch") ||
-    message.toLowerCase().includes("network")
-  ) {
-    return "No se pudo conectar con el servicio de autenticación. Revisa tu conexión e inténtalo nuevamente.";
-  }
-
-  return message || fallback;
+  return translateAuthMessage(message, fallback);
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -110,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
       if (result.error) {
-        return result.error.message ?? "Error al iniciar sesión";
+        return getAuthErrorMessage(result.error, "Error al iniciar sesión");
       }
 
       const sessionResult = await authClient.getSession();
@@ -141,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       });
       if (result.error) {
-        return result.error.message ?? "Error al registrarse";
+        return getAuthErrorMessage(result.error, "Error al registrarse");
       }
 
       const sessionResult = await authClient.getSession();
