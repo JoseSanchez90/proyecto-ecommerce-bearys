@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "../ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
+import { FiLoader } from "react-icons/fi";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -29,12 +30,18 @@ function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    const err = await login(email, password);
-    setSubmitting(false);
-    if (err) {
-      setError(err);
-    } else {
-      onClose();
+    try {
+      const err = await login(email, password);
+      if (err) {
+        setError(err);
+      } else {
+        onClose();
+      }
+    } catch (cause) {
+      console.error("Error inesperado al iniciar sesión", cause);
+      setError("Ocurrió un error inesperado. Inténtalo nuevamente.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -93,7 +100,14 @@ function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
             className="w-full bg-violet-600 hover:bg-violet-500 transition-colors cursor-pointer"
             disabled={submitting}
           >
-            {submitting ? "Iniciando sesión..." : "Iniciar sesión"}
+            {submitting ? (
+              <>
+                <FiLoader className="animate-spin" aria-hidden="true" />
+                Iniciando sesión...
+              </>
+            ) : (
+              "Iniciar sesión"
+            )}
           </Button>
         </form>
 

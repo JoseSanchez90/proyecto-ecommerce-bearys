@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/auth-context";
+import { FiLoader } from "react-icons/fi";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -44,12 +45,18 @@ function RegisterModal({
     }
 
     setSubmitting(true);
-    const err = await signUp(name, email, password);
-    setSubmitting(false);
-    if (err) {
-      setError(err);
-    } else {
-      onClose();
+    try {
+      const err = await signUp(name, email, password);
+      if (err) {
+        setError(err);
+      } else {
+        onClose();
+      }
+    } catch (cause) {
+      console.error("Error inesperado al registrar la cuenta", cause);
+      setError("Ocurrió un error inesperado. Inténtalo nuevamente.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -152,7 +159,14 @@ function RegisterModal({
             className="w-full bg-violet-600 hover:bg-violet-500 transition-colors cursor-pointer"
             disabled={!acceptTerms || submitting}
           >
-            {submitting ? "Creando cuenta..." : "Crear cuenta"}
+            {submitting ? (
+              <>
+                <FiLoader className="animate-spin" aria-hidden="true" />
+                Creando cuenta...
+              </>
+            ) : (
+              "Crear cuenta"
+            )}
           </Button>
 
           <p className="text-center text-sm text-gray-500">

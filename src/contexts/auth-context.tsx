@@ -31,6 +31,28 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function getAuthErrorMessage(cause: unknown, fallback: string) {
+  const message =
+    cause instanceof Error
+      ? cause.message
+      : typeof cause === "object" && cause !== null && "message" in cause
+        ? String(cause.message)
+        : "";
+
+  if (message.toLowerCase().includes("invalid origin")) {
+    return "Este dominio no está autorizado en Neon Auth. Agrega la URL del sitio a los orígenes permitidos.";
+  }
+
+  if (
+    message.toLowerCase().includes("failed to fetch") ||
+    message.toLowerCase().includes("network")
+  ) {
+    return "No se pudo conectar con el servicio de autenticación. Revisa tu conexión e inténtalo nuevamente.";
+  }
+
+  return message || fallback;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -54,38 +76,57 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    authClient.getSession().then(async (result) => {
-      if (result.data?.session && result.data?.user) {
-        setUser({
-          id: result.data.user.id,
-          name: result.data.user.name ?? "",
-          email: result.data.user.email ?? "",
-        });
-        await refreshAdminAccess();
-      } else {
+    const restoreSession = async () => {
+      try {
+        const result = await authClient.getSession();
+        if (result.data?.session && result.data?.user) {
+          setUser({
+            id: result.data.user.id,
+            name: result.data.user.name ?? "",
+            email: result.data.user.email ?? "",
+          });
+          void refreshAdminAccess();
+        } else {
+          setAdminLoading(false);
+        }
+      } catch (cause) {
+        console.error("No se pudo restaurar la sesión de Neon Auth", cause);
         setAdminLoading(false);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+
+    void restoreSession();
   }, []);
 
   const login = async (
     email: string,
     password: string,
   ): Promise<string | null> => {
-    const result = await authClient.signIn.email({ email, password });
-    if (result.error) return result.error.message ?? "Error al iniciar sesion";
-
-    const sessionResult = await authClient.getSession();
-    if (sessionResult.data?.session && sessionResult.data?.user) {
-      setUser({
-        id: sessionResult.data.user.id,
-        name: sessionResult.data.user.name ?? "",
-        email: sessionResult.data.user.email ?? "",
+    try {
+      const result = await authClient.signIn.email({
+        email: email.trim(),
+        password,
       });
-      await refreshAdminAccess();
+      if (result.error) {
+        return result.error.message ?? "Error al iniciar sesión";
+      }
+
+      const sessionResult = await authClient.getSession();
+      if (sessionResult.data?.session && sessionResult.data?.user) {
+        setUser({
+          id: sessionResult.data.user.id,
+          name: sessionResult.data.user.name ?? "",
+          email: sessionResult.data.user.email ?? "",
+        });
+        void refreshAdminAccess();
+      }
+      return null;
+    } catch (cause) {
+      console.error("Error al iniciar sesión con Neon Auth", cause);
+      return getAuthErrorMessage(cause, "No se pudo iniciar sesión");
     }
-    return null;
   };
 
   const signUp = async (
@@ -93,19 +134,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ): Promise<string | null> => {
-    const result = await authClient.signUp.email({ name, email, password });
-    if (result.error) return result.error.message ?? "Error al registrarse";
-
-    const sessionResult = await authClient.getSession();
-    if (sessionResult.data?.session && sessionResult.data?.user) {
-      setUser({
-        id: sessionResult.data.user.id,
-        name: sessionResult.data.user.name ?? "",
-        email: sessionResult.data.user.email ?? "",
+    try {
+      const result = await authClient.signUp.email({
+        name: name.trim(),
+        email: email.trim(),
+        password,
       });
-      await refreshAdminAccess();
+      if (result.error) {
+        return result.error.message ?? "Error al registrarse";
+      }
+
+      const sessionResult = await authClient.getSession();
+      if (sessionResult.data?.session && sessionResult.data?.user) {
+        setUser({
+          id: sessionResult.data.user.id,
+          name: sessionResult.data.user.name ?? "",
+          email: sessionResult.data.user.email ?? "",
+        });
+        void refreshAdminAccess();
+      }
+      return null;
+    } catch (cause) {
+      console.error("Error al registrar la cuenta con Neon Auth", cause);
+      return getAuthErrorMessage(cause, "No se pudo crear la cuenta");
     }
-    return null;
   };
 
   const logout = async () => {
